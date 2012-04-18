@@ -1,7 +1,8 @@
 ScrambleSolver
 ==============
 
-Computes the best word combinations for cheating in the 
+Computes the best word combinations for cheating in the game Scramble With Friends&#8482;.
+
 
 Legal
 -----
