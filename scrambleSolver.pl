@@ -1,5 +1,7 @@
 #!/usr/bin/perl -w
 
+package ScrambleSolver;
+
 use Tree;
 use Graph;
 
@@ -41,25 +43,32 @@ sub depthFirstSearch {
 	my $dictionaryTree = shift;
 	my $vertex = shift;
 	my $string = shift;
+	my $path = shift;
 		
 	my $letter = substr($vertex, 0, 1);
+	my $position = substr($vertex, 1, length($vertex));
+	
 	$string = $string . $letter;
+	push(@{$path}, $position);
 		
 	my $result = stringHasPath($dictionaryTree, $string);
 	
 	if ($result == 0) {
 		return;
 	} elsif ($result == 2) {
-		print $string . "\n";
+		$words{$string} = $path;
 	}
 	
 	$boardGraph->set_vertex_attribute($vertex, "visited", 1);
 	foreach my $neighbor ($boardGraph->neighbors($vertex)) {
 		if (!$boardGraph->has_vertex_attribute($neighbor, "visited")) {
-			depthFirstSearch($boardGraph->deep_copy(), $dictionaryTree, $neighbor, $string);
+			my @pathCopy = @{$path};
+			depthFirstSearch($boardGraph->deep_copy(), $dictionaryTree, $neighbor, $string, \@pathCopy);
 		}
 	}
 }
+
+our %words = ();
 
 my $dictionaryFilesPath = "EOWL-v1.1.1/LF Delimited Format/";
 my $dictionaryFilenameEnding = " Words.txt";
@@ -187,12 +196,24 @@ for my $letter (A..Z) {
 
 # Generate all possible words
 print "Generating possible words...\n";
-my @words = ();
 
 # Perform depth first search on each position on graph, checking to see if
 # it exists in the dictionary tree
 for ($i = 0; $i < scalar(@scrambleBoard); $i++) {
 	for ($j = 0; $j < scalar(@{$scrambleBoard[$i]}); $j++) {
-		depthFirstSearch($boardGraph->copy_graph(), $dictionaryTree, @{$scrambleBoard[$i]}[$j] . (($i * 4) + $j));
+		depthFirstSearch($boardGraph->copy_graph(), $dictionaryTree, @{$scrambleBoard[$i]}[$j] . (($i * 4) + $j), "", ());
 	}
+}
+
+print "Found " . scalar(keys %words) . " words:\n";
+
+foreach my $key (sort(keys %words)) {
+	print $key . " | ";
+	for (my $i = 0; $i < scalar(@{$words{$key}}); $i++) {
+		print @{$words{$key}}[$i];
+		if ($i != scalar(@{$words{$key}}) - 1) {
+			print " -> ";
+		}
+	}
+	print "\n";
 }
